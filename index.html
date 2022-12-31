@@ -1,0 +1,78 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search</title>
+    <style>
+      .head {
+        margin: 2vh 0;
+        height: 3vh;
+      }
+      .head a {
+        text-decoration: none;
+        padding: 2vh;
+      }
+      .search input {
+        height: 4vh;
+        padding: 3px;
+      }
+      .main table {
+        width: 90vw;
+      }
+      .main table img {
+        height: 20vh;
+      }
+      .main table td {
+        border-bottom: 3px solid black;
+        margin: 0 1vw;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <form>
+        <div class="head">
+          <a href="import">Đi đến "Nhập Hàng" </a>
+        </div>
+        <div class="search">
+          <input placeholder="Tim kiem" />
+          <button id="search-btn">Tìm kiếm</button>
+        </div>
+        <div class="main">
+          <table></table>
+        </div>
+      </form>
+    </div>
+  </body>
+  <script>
+    const genRow = (row_data) => {
+      let str_html = "";
+      str_html += `<td>${row_data.name}</td>`;
+      str_html += `<td>${row_data.price}</td>`;
+      str_html += `<td><img src='img/${row_data.url}' /></td>`;
+      return str_html;
+    };
+    const showResult = (arrData) => {
+      arrData.forEach((el) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = genRow(el);
+        table.append(tr);
+      });
+    };
+
+    const form = document.querySelector("form");
+    const query = document.querySelector(".search input");
+    const table = document.querySelector(".main table");
+
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault()
+      table.innerHTML = "";
+      const result = await fetch(`/q?name=${query.value.toLowerCase()}`);
+      const data = await result.json();
+
+      showResult(data);
+    });
+  </script>
+</html>

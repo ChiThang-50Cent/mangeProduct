@@ -1,0 +1,19 @@
+POST http://localhost:3000/insert
+Content-Type: application/json
+
+{ "name": "A", "price": "100", "url": "1672447265202_310734835.jpeg" }
+
+###
+POST http://localhost:3000/insert
+Content-Type: application/json
+
+{ "name": "AAA", "price": "200", "url": "1672447282200_768859416.jpeg" }
+
+###
+POST http://localhost:3000/insert
+Content-Type: application/json
+
+{ "name": "B", "price": "100", "url": "1672447292822_690496949.jpeg" }
+
+###
+GET http://localhost:3000/db?name=a

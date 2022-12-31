@@ -1,0 +1,162 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nhập liệu</title>
+    <style>
+      .head {
+        margin: 2vh 0;
+        height: 3vh;
+      }
+      .head a {
+        text-decoration: none;
+        padding: 2vh;
+      }
+      #form input {
+        margin: 1vh;
+        height: 4vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="head">
+        <a href="/">Đi đến "Tìm kiếm"</a>
+      </div>
+      <div class="main">
+        <form id="form">
+          <input type="text" placeholder="Ten" name="name" required /><br />
+          <input type="text" placeholder="Gia" name="price" required />
+          <br />
+          <input
+            type="file"
+            name="myFile"
+            id="image"
+            accept="image/"
+            required
+          /><br />
+          <input type="submit" value="Cap Nhat" />
+        </form>
+      </div>
+    </div>
+  </body>
+  <script>
+    const uploadPhotos = () => {
+      // Read in file
+      let file = event.target.files[0];
+
+      // Ensure it's an image
+      if (file.type.match(/image.*/)) {
+        console.log("An image has been loaded");
+
+        // Load the image
+        let reader = new FileReader();
+        reader.onload = function (readerEvent) {
+          let image = new Image();
+          image.onload = async function (imageEvent) {
+            // Resize the image
+            let canvas = document.createElement("canvas"),
+              max_size = 544, // TODO : pull max size from a site config
+              width = image.width,
+              height = image.height;
+            if (width > height) {
+              if (width > max_size) {
+                height *= max_size / width;
+                width = max_size;
+              }
+            } else {
+              if (height > max_size) {
+                width *= max_size / height;
+                height = max_size;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext("2d").drawImage(image, 0, 0, width, height);
+            let dataUrl = canvas.toDataURL("image/jpeg");
+            let resizedImage = dataURLToBlob(dataUrl);
+
+            let data_form = new FormData();
+            let file = new File([resizedImage], "xyz.png", {
+              lastModified: new Date(),
+              type: "image/png",
+            });
+            data_form.append("myFile", file);
+            const res = await fetch("/uploadfile", {
+              method: "POST",
+              body: data_form,
+            });
+
+            const data = await res.json();
+            window.img_url = data.url;
+          };
+          image.src = readerEvent.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    const dataURLToBlob = (dataURL) => {
+      let BASE64_MARKER = ";base64,";
+      if (dataURL.indexOf(BASE64_MARKER) == -1) {
+        let parts = dataURL.split(",");
+        let contentType = parts[0].split(":")[1];
+        let raw = parts[1];
+
+        return new Blob([raw], { type: contentType });
+      }
+
+      let parts = dataURL.split(BASE64_MARKER);
+      let contentType = parts[0].split(":")[1];
+      let raw = window.atob(parts[1]);
+      let rawLength = raw.length;
+
+      let uInt8Array = new Uint8Array(rawLength);
+
+      for (let i = 0; i < rawLength; ++i) {
+        uInt8Array[i] = raw.charCodeAt(i);
+      }
+
+      return new Blob([uInt8Array], { type: contentType });
+    };
+
+    const name = document.querySelector("#form input[name='name']");
+    const price = document.querySelector("#form input[name='price']");
+    const image = document.querySelector("#image");
+    const form = document.querySelector("#form");
+
+    image.addEventListener("change", () => {
+      uploadPhotos();
+    });
+
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+
+      let data = {
+        name: name.value,
+        price: price.value,
+        url: window.img_url,
+      };
+
+      if (!data.url) alert("Ccập nhật ảnh không thành công");
+
+      const res = await fetch("/insert", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (res.status == 200) {
+        name.value = "";
+        price.value = "";
+        image.value = "";
+        name.focus();
+      } else {
+        alert("Cập nhật không thành công");
+      }
+    });
+  </script>
+</html>
